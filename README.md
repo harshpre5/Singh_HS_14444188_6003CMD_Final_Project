@@ -20,11 +20,11 @@
 - Dashboard with pending approvals and project overview
 - Project list and creation
 - Project editor with role builder
-- **Constraint configuration** — 10 constraint types per role (mandatory skill, min proficiency, max workload, availability, certification, budget cap, location, etc.)
-- **Weight configuration** — interactive sliders with live doughnut chart
+- **Constraint configuration**  10 constraint types per role (mandatory skill, min proficiency, max workload, availability, certification, budget cap, location, etc.)
+- **Weight configuration**  interactive sliders with live doughnut chart
 - Employee browsing with detailed profiles
-- **Full results page** — ranked candidates, Pareto alternatives, sensitivity, Monte Carlo, skill gaps, methodology panel
-- **Candidate detail** — radar chart, score bars, skill decay table, selection/rejection reasons
+- **Full results page**  ranked candidates, Pareto alternatives, sensitivity, Monte Carlo, skill gaps, methodology panel
+- **Candidate detail**  radar chart, score bars, skill decay table, selection/rejection reasons
 - **LLM Comparison** page
 
 ### Superuser Module (7 pages)
