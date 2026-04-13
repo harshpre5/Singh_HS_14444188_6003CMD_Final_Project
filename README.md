@@ -14,7 +14,7 @@
 - Skills manager (add/remove skills, proficiency 1-10, category filter)
 - Availability & schedule (status, current project, reason, hours, dates)
 - Certifications manager (add/remove with dates)
-- **Recommendation Insights** — see every time you've been evaluated, your scores, selection/rejection reasons
+- **Recommendation Insights**  see every time you've been evaluated, your scores, selection/rejection reasons
 
 ### Manager Module (10 pages)
 - Dashboard with pending approvals and project overview
