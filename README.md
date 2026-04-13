@@ -31,7 +31,7 @@
 - Executive dashboard with recent engine runs
 - User management (activate/deactivate, change roles)
 - Skills taxonomy viewer (all 500+ skills across 26 categories)
-- **Rich analytics** — 6 charts (department, workload, top skills, experience, availability, location)
+- **Rich analytics**  6 charts (department, workload, top skills, experience, availability, location)
 - Audit logs with pagination
 - **All projects monitoring** across managers
 - **LLM Comparison** methodology page
