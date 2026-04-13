@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block page_title %}Recommendation Results{% endblock %}
+{% block page_subtitle %}{{ project.name }} — Engine Run {{ rec.run_timestamp.strftime('%d %b %Y %H:%M') }}{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('manager.edit_project', project_id=project.id) }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Project</a>
+{% endblock %}
+
+{% block content %}
+<!-- Overview Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ rec.candidates.filter_by(is_selected=True).count() }}</div>
+        <div class="stat-label">Selected Members</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-percentage"></i></div>
+        <div class="stat-value">{{ (rec.confidence_score * 100)|int }}%</div>
+        <div class="stat-label">Monte Carlo Confidence</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-handshake"></i></div>
+        <div class="stat-value">{{ (rec.team_synergy_score * 100)|int }}%</div>
+        <div class="stat-label">Team Synergy</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon {% if skill_gaps.total_gaps == 0 %}green{% else %}orange{% endif %}"><i class="fas fa-puzzle-piece"></i></div>
+        <div class="stat-value">{{ (skill_gaps.coverage_score * 100)|int }}%</div>
+        <div class="stat-label">Skill Coverage</div>
+    </div>
+</div>
+
+<!-- Instructions -->
+{% if rec.status != 'approved' %}
+<div style="padding:16px 20px;background:var(--accent-subtle);border:1px solid var(--accent);border-radius:var(--radius-lg);margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+    <i class="fas fa-info-circle" style="color:var(--accent);font-size:1.3rem;"></i>
+    <div>
+        <div style="font-weight:600;color:var(--accent);">Review & Select Your Team</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">The engine has recommended candidates (marked with green). You can manually select or deselect anyone using the buttons below. When you're happy with your team, click <strong>Finalise Project</strong> at the bottom.</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recommended Team Per Role -->
+<h2 style="font-size:1.15rem;font-weight:700;margin:20px 0 16px;"><i class="fas fa-users-cog" style="color:var(--accent);margin-right:8px;"></i>Candidates by Role</h2>
+
+{% for role in roles %}
+{% set role_data = by_role.get(role.id, {'passed': [], 'failed': []}) %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">{{ role.role_title }} <span style="font-weight:400;color:var(--text-muted);">× {{ role.quantity }}</span></h3>
+            <div style="font-size:0.8rem;color:var(--text-muted);">
+                {{ role_data.passed|length }} scored · {{ role_data.failed|length }} filtered out ·
+                <span style="color:var(--success);font-weight:600;">{{ role_data.passed|selectattr('is_selected')|list|length }} selected</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <a href="{{ url_for('recommendation.configure_constraints', role_id=role.id) }}" class="btn btn-sm btn-ghost"><i class="fas fa-filter"></i></a>
+            <a href="{{ url_for('recommendation.configure_weights', role_id=role.id) }}" class="btn btn-sm btn-ghost"><i class="fas fa-sliders-h"></i></a>
+        </div>
+    </div>
+
+    {% if role_data.passed %}
+    <div style="display:flex;flex-direction:column;gap:10px;">
+        {% for c in role_data.passed %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);border-left:3px solid {% if c.is_selected %}var(--success){% else %}var(--border-color){% endif %};transition:var(--transition);">
+            <div style="display:flex;align-items:center;gap:14px;flex:1;">
+                <div style="text-align:center;min-width:36px;">
+                    <div style="font-size:1.3rem;font-weight:800;color:{% if c.rank <= 3 %}var(--accent){% else %}var(--text-muted){% endif %};">#{{ c.rank }}</div>
+                </div>
+                <div class="avatar" style="background:{{ c.employee_profile.user.avatar_color }};width:40px;height:40px;font-size:0.8rem;">{{ c.employee_profile.user.initials }}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:600;">
+                        {{ c.employee_profile.user.full_name }}
+                        {% if c.is_selected %}<span class="badge badge-success" style="margin-left:6px;">Selected</span>{% endif %}
+                        {% if c.is_manually_overridden %}<span class="badge badge-warning" style="margin-left:4px;">Manual</span>{% endif %}
+                    </div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);">
+                        {{ c.employee_profile.job_title }} · {{ c.employee_profile.department }}
+                        · {{ c.employee_profile.years_of_experience }} yrs · £{{ c.employee_profile.hourly_rate }}/hr
+                        · Workload: {{ c.employee_profile.current_workload|int }}%
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="text-align:right;">
+                    <div style="font-size:1.2rem;font-weight:700;color:var(--accent);">{{ (c.overall_score * 100)|int }}%</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">TOPSIS</div>
+                </div>
+                <div class="progress-bar" style="width:60px;height:8px;">
+                    <div class="progress-fill" style="width:{{ (c.overall_score * 100)|int }}%"></div>
+                </div>
+                <!-- Select/Deselect Button -->
+                {% if rec.status != 'approved' %}
+                <form method="POST" action="{{ url_for('recommendation.toggle_selection', candidate_id=c.id) }}" style="margin:0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {% if c.is_selected %}btn-danger{% else %}btn-success{% endif %}" title="{% if c.is_selected %}Deselect{% else %}Select{% endif %}">
+                        <i class="fas {% if c.is_selected %}fa-times{% else %}fa-check{% endif %}"></i>
+                        {% if c.is_selected %}Remove{% else %}Select{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{{ url_for('recommendation.candidate_detail', candidate_id=c.id) }}" class="btn btn-sm btn-ghost" title="View Details">
+                    <i class="fas fa-search"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:30px;">
+        <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
+        <p>No candidates passed the hard constraints for this role.</p>
+    </div>
+    {% endif %}
+
+    {% if role_data.failed %}
+    <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:0.82rem;color:var(--text-muted);padding:8px;">
+            <i class="fas fa-ban" style="margin-right:4px;"></i>{{ role_data.failed|length }} rejected candidates
+        </summary>
+        <div style="padding:8px;font-size:0.8rem;">
+            {% for c in role_data.failed[:10] %}
+            <div style="padding:8px;border-bottom:1px solid var(--border-color);">
+                <strong>{{ c.employee_profile.user.full_name }}</strong>
+                <span style="color:var(--danger);margin-left:8px;">
+                    {% if c.rejection_reasons %}
+                        {% set reasons = c.rejection_reasons %}
+                        {% if reasons is string %}
+                            {{ reasons }}
+                        {% endif %}
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+</div>
+{% endfor %}
+
+<!-- ====== FINALISE BUTTON ====== -->
+{% if rec.status != 'approved' %}
+<div class="card" style="margin:24px 0;text-align:center;padding:32px;border:2px solid var(--success);">
+    <div style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">
+        <i class="fas fa-check-double" style="color:var(--success);margin-right:8px;"></i>Ready to Finalise?
+    </div>
+    <p style="color:var(--text-muted);margin-bottom:6px;font-size:0.9rem;">
+        You have <strong style="color:var(--success);">{{ rec.candidates.filter_by(is_selected=True).count() }}</strong> team members selected.
+        Review your selections above, then click below to lock in the team.
+    </p>
+    <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.82rem;">
+        This will mark the project as completed and create allocations for each selected member.
+    </p>
+    <form method="POST" action="{{ url_for('recommendation.finalise_project', recommendation_id=rec.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-success" style="padding:14px 40px;font-size:1rem;">
+            <i class="fas fa-flag-checkered"></i> Finalise Project Team
+        </button>
+    </form>
+</div>
+{% else %}
+<div class="card" style="margin:24px 0;text-align:center;padding:24px;border:2px solid var(--success);background:var(--success-subtle);">
+    <i class="fas fa-check-circle" style="color:var(--success);font-size:2rem;margin-bottom:10px;"></i>
+    <div style="font-size:1.1rem;font-weight:700;color:var(--success);">Project Finalised</div>
+    <p style="color:var(--text-secondary);font-size:0.88rem;margin-top:6px;">This team has been approved and allocated.</p>
+    <a href="{{ url_for('recommendation.view_finalised', project_id=project.id) }}" class="btn btn-success" style="margin-top:12px;">
+        <i class="fas fa-eye"></i> View Finalised Team
+    </a>
+</div>
+{% endif %}
+
+<!-- Skill Gap Analysis -->
+{% if skill_gaps.gaps %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:8px;"></i>Skill Gap Analysis</h3>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for gap in skill_gaps.gaps %}
+        <div style="padding:10px 14px;background:{% if gap.severity == 'high' %}var(--danger-subtle){% else %}var(--warning-subtle){% endif %};border-radius:var(--radius-md);font-size:0.85rem;">
+            <strong>{{ gap.role }}</strong> — {{ gap.detail }}
+            <span class="badge badge-{% if gap.severity == 'high' %}danger{% else %}warning{% endif %}" style="margin-left:8px;">{{ gap.severity }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Pareto Alternatives -->
+{% if pareto %}
+<h2 style="font-size:1.15rem;font-weight:700;margin:28px 0 16px;"><i class="fas fa-balance-scale" style="color:var(--accent);margin-right:8px;"></i>Alternative Teams (Pareto)</h2>
+<div class="grid-3">
+    {% for alt in pareto %}
+    <div class="card">
+        <div style="font-weight:600;font-size:0.95rem;margin-bottom:8px;">{{ alt.label }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">{{ alt.description }}</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent);margin-bottom:4px;">{{ (alt.avg_score * 100)|int }}%</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);">Avg Score · {{ alt.total_assigned }} assigned</div>
+        {% for role_id_str, team_data in alt.get('team', {}).items() %}
+        <div style="font-size:0.8rem;margin-top:8px;">
+            <strong>{{ team_data.role }}:</strong>
+            {% for member in team_data.get('selected', []) %}
+            <span class="skill-tag">{{ member.name }} <span class="proficiency">{{ (member.score * 100)|int }}</span></span>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Sensitivity & Monte Carlo -->
+<div class="grid-2" style="margin-top:24px;">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-wave-square" style="color:var(--info);margin-right:8px;"></i>Sensitivity Analysis</h3>
+        </div>
+        {% if sensitivity.get('criteria_results') %}
+        <div style="margin-bottom:12px;font-size:0.85rem;">
+            <span style="font-weight:600;">Stability: {{ (sensitivity.stability_score * 100)|int }}%</span>
+            <span style="color:var(--text-muted);margin-left:8px;">({{ sensitivity.stable_criteria }}/{{ sensitivity.total_criteria }} stable)</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            {% for cr in sensitivity.criteria_results %}
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-tertiary);border-radius:var(--radius-sm);font-size:0.82rem;">
+                <span>{{ cr.criterion|replace('_',' ')|title }}</span>
+                <span class="badge badge-{% if cr.ranking_changed %}danger{% else %}success{% endif %}">{{ cr.stability }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-dice" style="color:var(--accent);margin-right:8px;"></i>Monte Carlo Confidence</h3>
+        </div>
+        <div style="text-align:center;margin:20px 0;">
+            <div style="font-size:3rem;font-weight:800;color:var(--accent);">{{ (rec.confidence_score * 100)|int }}%</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">200 iterations with ±15% weight perturbations</div>
+        </div>
+        <div class="progress-bar" style="height:12px;margin:16px 0;">
+            <div class="progress-fill" style="width:{{ (rec.confidence_score * 100)|int }}%;{% if rec.confidence_score >= 0.7 %}background:var(--success){% elif rec.confidence_score >= 0.4 %}background:var(--warning){% else %}background:var(--danger){% endif %};"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

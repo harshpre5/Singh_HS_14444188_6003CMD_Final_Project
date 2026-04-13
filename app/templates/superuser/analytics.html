@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block page_title %}Workforce Analytics{% endblock %}
+{% block page_subtitle %}Organisation-wide insights, skill distribution, and workforce health{% endblock %}
+
+{% block content %}
+<!-- Key Metrics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-battery-half"></i></div>
+        <div class="stat-value">{{ workload_avg }}%</div>
+        <div class="stat-label">Avg Workload</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-star"></i></div>
+        <div class="stat-value">{{ avg_rating }}/5</div>
+        <div class="stat-label">Avg Project Rating</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-brain"></i></div>
+        <div class="stat-value">{{ rec_count }}</div>
+        <div class="stat-label">Engine Runs</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-percentage"></i></div>
+        <div class="stat-value">{{ avg_confidence }}%</div>
+        <div class="stat-label">Avg Confidence</div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-building" style="color:var(--accent);margin-right:8px;"></i>Employees by Department</h3>
+        </div>
+        <canvas id="deptChart" height="280"></canvas>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-battery-half" style="color:var(--warning);margin-right:8px;"></i>Workload Distribution</h3>
+        </div>
+        <canvas id="workloadChart" height="280"></canvas>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-fire" style="color:var(--danger);margin-right:8px;"></i>Top 20 Skills in Organisation</h3>
+        </div>
+        <canvas id="skillsChart" height="400"></canvas>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-clock" style="color:var(--info);margin-right:8px;"></i>Experience Distribution</h3>
+        </div>
+        <canvas id="expChart" height="280"></canvas>
+        
+        <div style="margin-top:24px;">
+            <div class="card-header" style="margin-bottom:12px;">
+                <h3 class="card-title"><i class="fas fa-signal" style="color:var(--success);margin-right:8px;"></i>Availability</h3>
+            </div>
+            <canvas id="availChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Location Distribution -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:8px;"></i>Location Distribution</h3>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        {% for loc, count in loc_dist %}
+        <div style="padding:10px 16px;background:var(--bg-tertiary);border-radius:var(--radius-md);display:flex;align-items:center;gap:8px;">
+            <span style="font-weight:600;">{{ loc or 'Unknown' }}</span>
+            <span class="badge badge-purple">{{ count }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const colors = ['#6366F1','#8B5CF6','#EC4899','#EF4444','#F97316','#22C55E','#06B6D4','#3B82F6','#A855F7','#10B981','#F43F5E','#0EA5E9','#D946EF','#EAB308','#14B8A6','#F59E0B','#84CC16','#FB923C','#38BDF8','#C084FC'];
+    const gridColor = 'rgba(255,255,255,0.06)';
+    const tickColor = '#94A3B8';
+
+    // Department bar chart
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ dept_counts|map(attribute=0)|list|tojson }},
+            datasets: [{data: {{ dept_counts|map(attribute=1)|list|tojson }}, backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6}]
+        },
+        options: {responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:tickColor}},x:{grid:{display:false},ticks:{color:tickColor,maxRotation:45}}}}
+    });
+
+    // Workload doughnut
+    new Chart(document.getElementById('workloadChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ workload_dist|map(attribute=0)|list|tojson }},
+            datasets: [{data: {{ workload_dist|map(attribute=1)|list|tojson }}, backgroundColor: ['#22C55E','#06B6D4','#F97316','#EF4444','#DC2626'], borderWidth:0}]
+        },
+        options: {responsive:true, plugins:{legend:{position:'bottom',labels:{color:tickColor,padding:12}}}}
+    });
+
+    // Top Skills horizontal bar
+    new Chart(document.getElementById('skillsChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ top_skills|map(attribute=0)|list|tojson }},
+            datasets: [{data: {{ top_skills|map(attribute=1)|list|tojson }}, backgroundColor: colors.slice(0, {{ top_skills|length }}), borderRadius: 4}]
+        },
+        options: {indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor},ticks:{color:tickColor}},y:{grid:{display:false},ticks:{color:tickColor}}}}
+    });
+
+    // Experience pie
+    new Chart(document.getElementById('expChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ exp_dist|map(attribute=0)|list|tojson }},
+            datasets: [{data: {{ exp_dist|map(attribute=1)|list|tojson }}, backgroundColor: ['#6366F1','#8B5CF6','#EC4899','#F97316','#22C55E'], borderWidth:0}]
+        },
+        options: {responsive:true, plugins:{legend:{position:'bottom',labels:{color:tickColor}}}}
+    });
+
+    // Availability
+    new Chart(document.getElementById('availChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ avail_dist|map(attribute=0)|list|tojson }},
+            datasets: [{data: {{ avail_dist|map(attribute=1)|list|tojson }}, backgroundColor: ['#22C55E','#F97316','#EF4444','#06B6D4'], borderWidth:0}]
+        },
+        options: {responsive:true, plugins:{legend:{position:'bottom',labels:{color:tickColor,padding:10}}}}
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block page_title %}Manager Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your projects and team formation{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('manager.create_project') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Project</a>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-value">{{ projects | length }}</div>
+        <div class="stat-label">My Projects</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ total_employees }}</div>
+        <div class="stat-label">Total Employees</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-value">{{ pending_users | length }}</div>
+        <div class="stat-label">Pending Approvals</div>
+    </div>
+</div>
+
+{% if pending_users %}
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-user-clock" style="color:var(--warning);margin-right:8px;"></i>Pending Approvals</h3>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for user in pending_users %}
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="avatar" style="background:{{ user.avatar_color }}">{{ user.initials }}</div>
+                <div>
+                    <div style="font-weight:600;">{{ user.full_name }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">{{ user.email }}</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <form method="POST" action="{{ url_for('manager.approve_user', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('manager.reject_user', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-times"></i> Reject</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">My Projects</h3>
+        <a href="{{ url_for('manager.create_project') }}" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> New</a>
+    </div>
+    {% if projects %}
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Project</th><th>Status</th><th>Priority</th><th>Roles</th><th>Created</th><th></th></tr></thead>
+            <tbody>
+            {% for p in projects %}
+            <tr>
+                <td style="font-weight:600;">{{ p.name }}</td>
+                <td><span class="badge badge-{% if p.status == 'in_progress' %}success{% elif p.status == 'draft' %}info{% else %}purple{% endif %}">{{ p.status | replace('_',' ') | title }}</span></td>
+                <td><span class="badge badge-{% if p.priority == 'critical' %}danger{% elif p.priority == 'high' %}warning{% else %}info{% endif %}">{{ p.priority | title }}</span></td>
+                <td>{{ p.role_requirements.count() }}</td>
+                <td style="color:var(--text-muted); font-size:0.82rem;">{{ p.created_at.strftime('%d %b %Y') }}</td>
+                <td><a href="{{ url_for('manager.edit_project', project_id=p.id) }}" class="btn btn-sm btn-ghost"><i class="fas fa-arrow-right"></i></a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <p>No projects yet. Create your first project!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

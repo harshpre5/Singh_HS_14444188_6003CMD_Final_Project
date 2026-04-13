@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block page_title %}Certifications{% endblock %}
+{% block page_subtitle %}Manage your professional certifications{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">My Certifications ({{ certs | length }})</h3>
+        </div>
+        {% if certs %}
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            {% for cert in certs %}
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+                <div>
+                    <div style="font-weight:600; font-size:0.9rem;">{{ cert.name }}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        {{ cert.issuing_body or '' }}
+                        {% if cert.date_obtained %} · Obtained: {{ cert.date_obtained.strftime('%b %Y') }}{% endif %}
+                        {% if cert.expiry_date %} · Expires: {{ cert.expiry_date.strftime('%b %Y') }}{% endif %}
+                    </div>
+                </div>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="cert_id" value="{{ cert.id }}">
+                    <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-certificate"></i>
+            <p>No certifications added yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Add Certification</h3>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add">
+            <div class="form-group">
+                <label class="form-label">Certification Name</label>
+                <input type="text" name="name" required placeholder="e.g. AWS Certified Solutions Architect">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Issuing Body</label>
+                <input type="text" name="issuing_body" placeholder="e.g. Amazon Web Services">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Credential ID</label>
+                <input type="text" name="credential_id" placeholder="Optional">
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Date Obtained</label>
+                    <input type="date" name="date_obtained">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiry Date</label>
+                    <input type="date" name="expiry_date">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Certification</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

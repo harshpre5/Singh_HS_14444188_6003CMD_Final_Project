@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block page_title %}Availability & Schedule{% endblock %}
+{% block page_subtitle %}Let managers know when you're available for new projects{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">My Availability</h3>
+        {% if avail %}
+        <span class="badge {% if avail.status == 'available' %}badge-success{% elif avail.status == 'partially_busy' %}badge-warning{% elif avail.status == 'fully_busy' %}badge-danger{% else %}badge-info{% endif %}">
+            {{ avail.status | replace('_', ' ') | title }}
+        </span>
+        {% endif %}
+    </div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Availability Status</label>
+                <select name="status" id="statusSelect" onchange="toggleFields()">
+                    <option value="available" {{ 'selected' if avail and avail.status == 'available' }}>Available — Ready for new projects</option>
+                    <option value="partially_busy" {{ 'selected' if avail and avail.status == 'partially_busy' }}>Partially Busy — Some capacity left</option>
+                    <option value="fully_busy" {{ 'selected' if avail and avail.status == 'fully_busy' }}>Fully Busy — No capacity</option>
+                    <option value="on_leave" {{ 'selected' if avail and avail.status == 'on_leave' }}>On Leave</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Current Workload (%)</label>
+                <input type="range" name="current_workload" min="0" max="100" step="5"
+                       value="{{ profile.current_workload|int if profile else 0 }}"
+                       id="workloadRange"
+                       oninput="document.getElementById('workloadVal').textContent = this.value + '%'"
+                       style="accent-color:var(--accent);">
+                <span id="workloadVal" style="font-weight:700; color:var(--accent);">{{ profile.current_workload|int if profile else 0 }}%</span>
+            </div>
+        </div>
+
+        <div id="busyFields">
+            <div class="form-group">
+                <label class="form-label">Current Project Name</label>
+                <input type="text" name="current_project_name" value="{{ avail.current_project_name if avail else '' }}" placeholder="e.g. Customer Portal Redesign">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Reason for Busy Status</label>
+                <textarea name="reason" placeholder="Explain why you are busy — e.g. 'Working on the backend migration for Project Alpha, handling API development and database redesign.'">{{ avail.reason if avail else '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Hours Per Week Available</label>
+                <input type="number" name="hours_per_week_available" min="0" max="60" value="{{ avail.hours_per_week_available|int if avail else 40 }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Available From (date you become free)</label>
+                <input type="date" name="available_from" value="{{ avail.available_from.strftime('%Y-%m-%d') if avail and avail.available_from else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Available Until</label>
+                <input type="date" name="available_until" value="{{ avail.available_until.strftime('%Y-%m-%d') if avail and avail.available_until else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Additional Notes</label>
+            <textarea name="notes" placeholder="Any other details about your schedule, preferred working hours, etc.">{{ avail.notes if avail else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Availability</button>
+        </div>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+function toggleFields() {
+    const status = document.getElementById('statusSelect').value;
+    const busyFields = document.getElementById('busyFields');
+    busyFields.style.display = (status === 'available') ? 'none' : 'block';
+}
+toggleFields();
+</script>
+{% endblock %}
+{% endblock %}

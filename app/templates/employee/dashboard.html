@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ current_user.first_name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-code"></i></div>
+        <div class="stat-value">{{ profile.skills.count() if profile else 0 }}</div>
+        <div class="stat-label">Skills Listed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-value">{{ profile.total_projects_completed if profile else 0 }}</div>
+        <div class="stat-label">Projects Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-battery-half"></i></div>
+        <div class="stat-value">{{ profile.current_workload|int if profile else 0 }}%</div>
+        <div class="stat-label">Current Workload</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-star"></i></div>
+        <div class="stat-value">{{ profile.average_project_rating if profile else 'N/A' }}</div>
+        <div class="stat-label">Avg Project Rating</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-bolt" style="color:var(--accent);margin-right:8px;"></i>Quick Actions</h3>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <a href="{{ url_for('employee.profile') }}" class="btn btn-secondary" style="justify-content:flex-start;">
+                <i class="fas fa-user"></i> Update My Profile
+            </a>
+            <a href="{{ url_for('employee.skills') }}" class="btn btn-secondary" style="justify-content:flex-start;">
+                <i class="fas fa-code"></i> Manage Skills & Proficiency
+            </a>
+            <a href="{{ url_for('employee.availability') }}" class="btn btn-secondary" style="justify-content:flex-start;">
+                <i class="fas fa-calendar-alt"></i> Update Availability
+            </a>
+            <a href="{{ url_for('employee.certifications') }}" class="btn btn-secondary" style="justify-content:flex-start;">
+                <i class="fas fa-certificate"></i> Manage Certifications
+            </a>
+            <a href="{{ url_for('employee.insights') }}" class="btn btn-secondary" style="justify-content:flex-start;">
+                <i class="fas fa-chart-line"></i> View Recommendation Insights
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-line" style="color:var(--success);margin-right:8px;"></i>Profile Completeness</h3>
+        </div>
+        {% set has_profile = profile is not none %}
+        {% set has_skills = profile and profile.skills.count() > 0 %}
+        {% set has_avail = profile and profile.availabilities.count() > 0 %}
+        {% set has_certs = profile and profile.certifications.count() > 0 %}
+        {% set score = [has_profile, has_skills, has_avail, has_certs] | select('true') | list | length %}
+        {% set pct = (score / 4 * 100) | int %}
+
+        <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:0.85rem; font-weight:600;">{{ pct }}% Complete</span>
+                <span style="font-size:0.8rem; color:var(--text-muted);">{{ score }}/4 sections</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:{{ pct }}%"></div>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+            <div><i class="fas {{ 'fa-check-circle' if has_profile else 'fa-circle' }}" style="color:{{ 'var(--success)' if has_profile else 'var(--text-muted)' }}; margin-right:8px;"></i>Basic Profile</div>
+            <div><i class="fas {{ 'fa-check-circle' if has_skills else 'fa-circle' }}" style="color:{{ 'var(--success)' if has_skills else 'var(--text-muted)' }}; margin-right:8px;"></i>Skills & Proficiency</div>
+            <div><i class="fas {{ 'fa-check-circle' if has_avail else 'fa-circle' }}" style="color:{{ 'var(--success)' if has_avail else 'var(--text-muted)' }}; margin-right:8px;"></i>Availability & Schedule</div>
+            <div><i class="fas {{ 'fa-check-circle' if has_certs else 'fa-circle' }}" style="color:{{ 'var(--success)' if has_certs else 'var(--text-muted)' }}; margin-right:8px;"></i>Certifications</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

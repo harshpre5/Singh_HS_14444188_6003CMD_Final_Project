@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block page_title %}{{ emp_user.full_name }}{% endblock %}
+{% block page_subtitle %}{{ profile.job_title if profile else 'Employee' }} · {{ profile.department if profile else '' }}{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('manager.employee_list') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+{% endblock %}
+
+{% block content %}
+{% if profile %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ profile.years_of_experience }}</div>
+        <div class="stat-label">Years Experience</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-value">{{ profile.total_projects_completed }}</div>
+        <div class="stat-label">Projects Done</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-battery-half"></i></div>
+        <div class="stat-value">{{ profile.current_workload|int }}%</div>
+        <div class="stat-label">Workload</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-star"></i></div>
+        <div class="stat-value">{{ profile.average_project_rating }}</div>
+        <div class="stat-label">Avg Rating</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Skills</h3></div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            {% for es in profile.skills %}
+            <span class="skill-tag">{{ es.skill.name }}<span class="proficiency">{{ es.proficiency }}</span></span>
+            {% endfor %}
+        </div>
+        {% if profile.skills.count() == 0 %}
+        <p style="color:var(--text-muted); font-size:0.85rem;">No skills listed.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Details</h3></div>
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.88rem;">
+            <div><strong>Location:</strong> {{ profile.location or 'N/A' }}</div>
+            <div><strong>Hourly Rate:</strong> £{{ profile.hourly_rate }}</div>
+            <div><strong>Career Goal:</strong> {{ profile.career_goal or 'Not specified' }}</div>
+            <div><strong>Bio:</strong> {{ profile.bio or 'No bio' }}</div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-user"></i>
+    <p>This employee hasn't completed their profile yet.</p>
+</div>
+{% endif %}
+{% endblock %}

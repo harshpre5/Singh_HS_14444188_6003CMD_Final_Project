@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Pending Approval — SkillMatch Pro{% endblock %}
+
+{% block fullpage %}
+<div class="pending-wrapper">
+    <div>
+        <div class="pending-icon"><i class="fas fa-hourglass-half"></i></div>
+        <h2 class="pending-title">Account Pending Approval</h2>
+        <p class="pending-desc">Your account has been created and is awaiting approval from a manager. You'll be able to access the platform once approved.</p>
+        <div style="margin-top: 24px;">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

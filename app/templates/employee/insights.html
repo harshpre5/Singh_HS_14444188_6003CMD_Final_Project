@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block page_title %}Recommendation Insights{% endblock %}
+{% block page_subtitle %}See how you've been evaluated in project recommendations{% endblock %}
+
+{% block content %}
+{% if results %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-clipboard-check"></i></div>
+        <div class="stat-value">{{ results|length }}</div>
+        <div class="stat-label">Times Evaluated</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ results|selectattr('entry.is_selected')|list|length }}</div>
+        <div class="stat-label">Times Selected</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-filter"></i></div>
+        <div class="stat-value">{{ results|selectattr('entry.hard_constraint_pass')|list|length }}</div>
+        <div class="stat-label">Passed Constraints</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-trophy"></i></div>
+        <div class="stat-value">
+            {% set scores = results|selectattr('entry.hard_constraint_pass')|map(attribute='entry.overall_score')|list %}
+            {% if scores %}{{ (scores|max * 100)|int }}%{% else %}N/A{% endif %}
+        </div>
+        <div class="stat-label">Best Score</div>
+    </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px;">
+    {% for r in results %}
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                    <span style="font-weight:700;font-size:1rem;">{{ r.project.name if r.project else 'Unknown Project' }}</span>
+                    {% if r.entry.is_selected %}
+                    <span class="badge badge-success">Selected</span>
+                    {% elif r.entry.hard_constraint_pass %}
+                    <span class="badge badge-info">Scored #{{ r.entry.rank }}</span>
+                    {% else %}
+                    <span class="badge badge-danger">Filtered Out</span>
+                    {% endif %}
+                </div>
+                <div style="font-size:0.82rem;color:var(--text-muted);">
+                    Role: <strong>{{ r.role.role_title if r.role else 'N/A' }}</strong>
+                    · {{ r.date.strftime('%d %b %Y %H:%M') if r.date else '' }}
+                </div>
+            </div>
+            {% if r.entry.hard_constraint_pass %}
+            <div style="text-align:right;">
+                <div style="font-size:1.5rem;font-weight:800;color:var(--accent);">{{ (r.entry.overall_score * 100)|int }}%</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">Overall Score</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if r.entry.hard_constraint_pass and r.breakdown %}
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;">
+            {% for criterion, score in r.breakdown.items() %}
+            <div style="padding:6px 12px;background:var(--bg-tertiary);border-radius:var(--radius-sm);font-size:0.8rem;">
+                <span style="color:var(--text-muted);">{{ criterion|replace('_',' ')|title }}:</span>
+                <span style="font-weight:700;color:{% if score >= 0.7 %}var(--success){% elif score >= 0.4 %}var(--warning){% else %}var(--danger){% endif %};">{{ (score * 100)|int }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if r.selection %}
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+            {% for reason in r.selection %}
+            <span style="padding:4px 10px;background:var(--success-subtle);color:var(--success);border-radius:50px;font-size:0.75rem;font-weight:600;">
+                <i class="fas fa-check" style="margin-right:4px;"></i>{{ reason }}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if r.rejection %}
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+            {% for reason in r.rejection %}
+            <span style="padding:4px 10px;background:var(--danger-subtle);color:var(--danger);border-radius:50px;font-size:0.75rem;font-weight:600;">
+                <i class="fas fa-times" style="margin-right:4px;"></i>{{ reason }}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-chart-line"></i>
+    <p>You haven't been evaluated in any recommendations yet. Once a manager runs the engine, your results will appear here.</p>
+</div>
+{% endif %}
+{% endblock %}

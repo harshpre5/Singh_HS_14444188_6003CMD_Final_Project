@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block page_title %}Employees{% endblock %}
+{% block page_subtitle %}Browse the employee pool for team formation{% endblock %}
+
+{% block content %}
+<div style="display:flex; flex-direction:column; gap:14px;">
+    {% for user, profile in employees %}
+    <a href="{{ url_for('manager.view_employee', user_id=user.id) }}" class="employee-card">
+        <div class="employee-avatar" style="background:{{ user.avatar_color }}">{{ user.initials }}</div>
+        <div class="employee-info">
+            <div class="employee-name">{{ user.full_name }}</div>
+            <div class="employee-title">{{ profile.job_title or 'No title' }} · {{ profile.department or 'No dept' }}</div>
+            <div class="employee-meta">
+                <span><i class="fas fa-clock"></i> {{ profile.years_of_experience }} yrs</span>
+                <span><i class="fas fa-battery-half"></i> {{ profile.current_workload|int }}% workload</span>
+                <span><i class="fas fa-map-marker-alt"></i> {{ profile.location or 'N/A' }}</span>
+                <span><i class="fas fa-code"></i> {{ profile.skills.count() }} skills</span>
+                <span><i class="fas fa-star"></i> {{ profile.average_project_rating }}/5</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% if not employees %}
+<div class="empty-state">
+    <i class="fas fa-users"></i>
+    <p>No approved employees found.</p>
+</div>
+{% endif %}
+{% endblock %}

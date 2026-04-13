@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block page_title %}LLM Comparison Analysis{% endblock %}
+{% block page_subtitle %}Why SkillMatch Pro outperforms general-purpose AI for team formation{% endblock %}
+
+{% block content %}
+<!-- Comparison Summary -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-check-double"></i></div>
+        <div class="stat-value">13</div>
+        <div class="stat-label">Decision Layers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-database"></i></div>
+        <div class="stat-value">Live</div>
+        <div class="stat-label">Database-Grounded</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-redo"></i></div>
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Reproducible</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-search-plus"></i></div>
+        <div class="stat-value">Full</div>
+        <div class="stat-label">Explainability</div>
+    </div>
+</div>
+
+<!-- Head to Head Comparison Table -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-columns" style="color:var(--accent);margin-right:8px;"></i>Feature Comparison</h3>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th style="text-align:center;">SkillMatch Pro</th>
+                    <th style="text-align:center;">ChatGPT / GPT-4</th>
+                    <th style="text-align:center;">Gemini</th>
+                    <th style="text-align:center;">Grok</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set features = [
+                    ('Deterministic output (same input → same result)', true, false, false, false),
+                    ('Live database integration', true, false, false, false),
+                    ('Hard constraint enforcement (mathematical)', true, false, false, false),
+                    ('Multi-role conflict prevention', true, false, false, false),
+                    ('TOPSIS multi-criteria scoring', true, false, false, false),
+                    ('Skill decay modelling', true, false, false, false),
+                    ('Workload fairness balancing', true, false, false, false),
+                    ('Team synergy from collaboration history', true, false, false, false),
+                    ('Pareto-optimal alternatives', true, false, false, false),
+                    ('Monte Carlo confidence scoring', true, false, false, false),
+                    ('Sensitivity analysis', true, false, false, false),
+                    ('Full audit trail with timestamps', true, false, false, false),
+                    ('Score breakdown per criterion', true, false, false, false),
+                    ('Constraint relaxation suggestions', true, false, false, false),
+                    ('Role-based access control', true, false, false, false),
+                    ('Natural language understanding', false, true, true, true),
+                    ('Handles ambiguous requirements', false, true, true, true),
+                    ('Zero setup required', false, true, true, true),
+                ] %}
+                {% for name, sm, gpt, gem, grok in features %}
+                <tr>
+                    <td style="font-size:0.85rem;">{{ name }}</td>
+                    <td style="text-align:center;"><i class="fas {{ 'fa-check-circle' if sm else 'fa-times-circle' }}" style="color:{{ 'var(--success)' if sm else 'var(--danger)' }};font-size:1.1rem;"></i></td>
+                    <td style="text-align:center;"><i class="fas {{ 'fa-check-circle' if gpt else 'fa-times-circle' }}" style="color:{{ 'var(--success)' if gpt else 'var(--danger)' }};font-size:1.1rem;"></i></td>
+                    <td style="text-align:center;"><i class="fas {{ 'fa-check-circle' if gem else 'fa-times-circle' }}" style="color:{{ 'var(--success)' if gem else 'var(--danger)' }};font-size:1.1rem;"></i></td>
+                    <td style="text-align:center;"><i class="fas {{ 'fa-check-circle' if grok else 'fa-times-circle' }}" style="color:{{ 'var(--success)' if grok else 'var(--danger)' }};font-size:1.1rem;"></i></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Detailed Analysis Cards -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-trophy" style="color:var(--success);margin-right:8px;"></i>SkillMatch Pro Strengths</h3>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.88rem;">
+            <div style="padding:12px;background:var(--success-subtle);border-radius:var(--radius-md);border-left:3px solid var(--success);">
+                <strong>Deterministic & Reproducible</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Same inputs always produce the same team recommendation. Critical for auditing and compliance. LLMs generate different outputs each time.</div>
+            </div>
+            <div style="padding:12px;background:var(--success-subtle);border-radius:var(--radius-md);border-left:3px solid var(--success);">
+                <strong>Mathematical Constraint Enforcement</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Hard constraints are enforced with absolute certainty. If max workload is 80%, nobody above 80% is ever recommended. LLMs can "forget" or approximate constraints.</div>
+            </div>
+            <div style="padding:12px;background:var(--success-subtle);border-radius:var(--radius-md);border-left:3px solid var(--success);">
+                <strong>Multi-Role Conflict Prevention</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">The engine guarantees no person is assigned to two roles. LLMs may suggest the same person for multiple roles if not explicitly told not to.</div>
+            </div>
+            <div style="padding:12px;background:var(--success-subtle);border-radius:var(--radius-md);border-left:3px solid var(--success);">
+                <strong>Academic Rigour (TOPSIS + MCDA)</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Uses peer-reviewed mathematical methods. Ideal/worst solution distance calculation with vector normalisation — not heuristic "gut feeling."</div>
+            </div>
+            <div style="padding:12px;background:var(--success-subtle);border-radius:var(--radius-md);border-left:3px solid var(--success);">
+                <strong>Complete Auditability</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Every decision is stored with full score breakdowns, timestamps, rejection reasons, and parameter snapshots. Required for enterprise compliance.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:8px;"></i>LLM Limitations for This Task</h3>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.88rem;">
+            <div style="padding:12px;background:var(--danger-subtle);border-radius:var(--radius-md);border-left:3px solid var(--danger);">
+                <strong>Prompt Sensitivity</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Small changes in how you phrase the request can produce completely different team recommendations. There's no stable, configurable interface.</div>
+            </div>
+            <div style="padding:12px;background:var(--danger-subtle);border-radius:var(--radius-md);border-left:3px solid var(--danger);">
+                <strong>No Persistent Database</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">You must paste all 150 employee profiles into every prompt. LLMs can't query a live database, track changes, or remember past allocations.</div>
+            </div>
+            <div style="padding:12px;background:var(--danger-subtle);border-radius:var(--radius-md);border-left:3px solid var(--danger);">
+                <strong>No Formal Scoring Method</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">LLMs approximate scoring based on pattern matching, not formal mathematical methods. They cannot compute TOPSIS closeness coefficients or Monte Carlo simulations.</div>
+            </div>
+            <div style="padding:12px;background:var(--danger-subtle);border-radius:var(--radius-md);border-left:3px solid var(--danger);">
+                <strong>No Explainability Guarantee</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">LLMs can explain their reasoning, but it may be post-hoc rationalisation rather than the actual decision process. SkillMatch Pro's explanations are computed from real scores.</div>
+            </div>
+            <div style="padding:12px;background:var(--danger-subtle);border-radius:var(--radius-md);border-left:3px solid var(--danger);">
+                <strong>Context Window Limits</strong>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">With 150+ employees and detailed profiles, LLMs may hit token limits, lose track of early data, or produce truncated results.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How to Run Comparison -->
+<div class="card" style="margin-top:24px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-flask" style="color:var(--accent);margin-right:8px;"></i>How to Run the Comparison Test</h3>
+    </div>
+    <div style="font-size:0.88rem;line-height:1.8;color:var(--text-secondary);">
+        <div style="padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);margin-bottom:12px;">
+            <strong style="color:var(--text-primary);">Step 1:</strong> Export the employee dataset from <code>exports/employees_dataset.json</code> (generated during seeding)
+        </div>
+        <div style="padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);margin-bottom:12px;">
+            <strong style="color:var(--text-primary);">Step 2:</strong> Create a project in SkillMatch Pro with specific roles and constraints. Run the engine. Save the results.
+        </div>
+        <div style="padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);margin-bottom:12px;">
+            <strong style="color:var(--text-primary);">Step 3:</strong> Paste the same dataset + requirements into ChatGPT, Gemini, and Grok. Ask each to form a team.
+        </div>
+        <div style="padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);margin-bottom:12px;">
+            <strong style="color:var(--text-primary);">Step 4:</strong> Compare: Did the LLM respect all hard constraints? Did it avoid double-assigning? Can it explain scores? Run it again — is the answer the same?
+        </div>
+        <div style="padding:14px;background:var(--accent-subtle);border-radius:var(--radius-md);border:1px solid var(--accent);">
+            <strong style="color:var(--accent);">Expected Result:</strong> SkillMatch Pro will produce a deterministic, fully-explained, constraint-compliant team. LLMs will produce varied, partially-explained results that may violate constraints or assign the same person to multiple roles.
+        </div>
+    </div>
+</div>
+
+<!-- Methodology Summary -->
+<div class="card" style="margin-top:24px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-graduation-cap" style="color:var(--accent);margin-right:8px;"></i>Mathematical Foundation</h3>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+        <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--accent);">TOPSIS</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">
+                Technique for Order Preference by Similarity to Ideal Solution (Hwang & Yoon, 1981). Ranks alternatives by computing their geometric distance from the ideal best and ideal worst solutions in a normalised, weighted decision matrix.
+            </div>
+        </div>
+        <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--accent);">Skill Decay Model</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">
+                Exponential decay function: <code>score = e^(-λt)</code> where λ = ln(2)/24 months. A skill unused for 2 years drops to 50% effectiveness. Based on Ebbinghaus forgetting curve principles adapted for professional skills.
+            </div>
+        </div>
+        <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--accent);">Monte Carlo Simulation</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">
+                200 iterations with ±15% random weight perturbations. Measures how frequently the top candidate remains #1 across all variations. High consistency = high confidence in the recommendation.
+            </div>
+        </div>
+        <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--accent);">Pareto Optimality</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">
+                Three weight profiles generate teams optimised for different trade-offs (skill vs cost vs balance). No single team dominates all others on every criterion — the manager chooses which trade-off suits their project needs.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

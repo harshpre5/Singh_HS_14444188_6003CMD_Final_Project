@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block page_title %}Scoring Weights — {{ role.role_title }}{% endblock %}
+{% block page_subtitle %}Adjust how criteria are weighted for {{ project.name }}{% endblock %}
+
+{% block header_actions %}
+<div style="display:flex;gap:8px;">
+    <a href="{{ url_for('recommendation.configure_constraints', role_id=role.id) }}" class="btn btn-secondary"><i class="fas fa-filter"></i> Constraints</a>
+    <a href="{{ url_for('manager.edit_project', project_id=project.id) }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:800px;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-sliders-h" style="color:var(--accent);margin-right:8px;"></i>Scoring Weight Configuration</h3>
+        <span id="totalWeight" class="badge badge-success">Total: 100%</span>
+    </div>
+
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:24px;">
+        Adjust the importance of each criterion. The engine uses these weights with TOPSIS (multi-criteria decision analysis) to rank candidates. Weights are automatically normalised.
+    </p>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {% for w in weights %}
+        {% set meta = criteria_labels.get(w.criterion, {}) %}
+        <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="stat-icon purple" style="width:34px;height:34px;font-size:0.85rem;">
+                        <i class="fas {{ meta.get('icon', 'fa-star') }}"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:0.9rem;">{{ meta.get('label', w.criterion|title) }}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">{{ meta.get('desc', '') }}</div>
+                    </div>
+                </div>
+                <span class="weight-value" id="val_{{ w.criterion }}" style="font-weight:700;font-size:1.1rem;color:var(--accent);min-width:45px;text-align:right;">
+                    {{ (w.weight * 100)|int }}%
+                </span>
+            </div>
+            <input type="range" name="weight_{{ w.criterion }}" min="0" max="100" step="1"
+                   value="{{ (w.weight * 100)|int }}"
+                   class="weight-slider"
+                   data-criterion="{{ w.criterion }}"
+                   oninput="updateWeight(this)"
+                   style="width:100%;accent-color:var(--accent);">
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);">
+                <span>Not important</span><span>Critical</span>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
+            <button type="button" class="btn btn-ghost" onclick="resetWeights()"><i class="fas fa-undo"></i> Reset to Default</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Weights</button>
+        </div>
+    </form>
+</div>
+
+<!-- Visual Weight Distribution -->
+<div class="card" style="max-width:800px;margin-top:20px;">
+    <div class="card-header">
+        <h3 class="card-title">Weight Distribution</h3>
+    </div>
+    <canvas id="weightChart" height="250"></canvas>
+</div>
+
+{% block extra_js %}
+<script>
+let chart;
+
+function updateWeight(slider) {
+    const crit = slider.dataset.criterion;
+    const val = slider.value;
+    document.getElementById('val_' + crit).textContent = val + '%';
+    updateTotal();
+    updateChart();
+}
+
+function updateTotal() {
+    const sliders = document.querySelectorAll('.weight-slider');
+    let total = 0;
+    sliders.forEach(s => total += parseInt(s.value));
+    const badge = document.getElementById('totalWeight');
+    badge.textContent = 'Total: ' + total + '%';
+    badge.className = total === 100 ? 'badge badge-success' : 'badge badge-warning';
+}
+
+function resetWeights() {
+    const defaults = {skill_match:25, experience:15, availability:15, cost_efficiency:10, project_success:10, versatility:5, career_alignment:10, certification_relevance:10};
+    document.querySelectorAll('.weight-slider').forEach(s => {
+        const crit = s.dataset.criterion;
+        if (defaults[crit] !== undefined) {
+            s.value = defaults[crit];
+            document.getElementById('val_' + crit).textContent = defaults[crit] + '%';
+        }
+    });
+    updateTotal();
+    updateChart();
+}
+
+function updateChart() {
+    const labels = [];
+    const data = [];
+    const colors = ['#6366F1','#8B5CF6','#EC4899','#EF4444','#F97316','#22C55E','#06B6D4','#3B82F6'];
+    document.querySelectorAll('.weight-slider').forEach((s, i) => {
+        labels.push(s.dataset.criterion.replace('_',' ').replace(/\b\w/g, l => l.toUpperCase()));
+        data.push(parseInt(s.value));
+    });
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('weightChart');
+    chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{data: data, backgroundColor: colors, borderWidth: 0}]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {position: 'right', labels: {color: '#94A3B8', font: {size: 12}}}
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateTotal();
+    updateChart();
+});
+</script>
+{% endblock %}
+{% endblock %}

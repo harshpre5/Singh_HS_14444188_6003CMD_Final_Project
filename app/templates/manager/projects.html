@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block page_title %}Projects{% endblock %}
+{% block page_subtitle %}Manage all your team formation projects{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('manager.create_project') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Project</a>
+{% endblock %}
+
+{% block content %}
+{% if projects %}
+<div style="display:flex; flex-direction:column; gap:14px;">
+    {% for p in projects %}
+    <a href="{{ url_for('manager.edit_project', project_id=p.id) }}" class="card" style="cursor:pointer;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-weight:600; font-size:1.05rem;">{{ p.name }}</div>
+                <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
+                    {{ p.role_requirements.count() }} roles · Created {{ p.created_at.strftime('%d %b %Y') }}
+                    {% if p.start_date %} · {{ p.start_date.strftime('%d %b') }} → {{ p.end_date.strftime('%d %b %Y') if p.end_date else 'TBD' }}{% endif %}
+                </div>
+                {% if p.description %}
+                <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:6px;">{{ p.description[:120] }}{% if p.description|length > 120 %}...{% endif %}</div>
+                {% endif %}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="badge badge-{% if p.priority == 'critical' %}danger{% elif p.priority == 'high' %}warning{% else %}info{% endif %}">{{ p.priority | title }}</span>
+                <span class="badge badge-{% if p.status == 'in_progress' %}success{% elif p.status == 'draft' %}purple{% else %}info{% endif %}">{{ p.status | replace('_',' ') | title }}</span>
+                <i class="fas fa-chevron-right" style="color:var(--text-muted); margin-left:8px;"></i>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-folder-open"></i>
+    <p>No projects yet. Create your first project to start building teams.</p>
+    <a href="{{ url_for('manager.create_project') }}" class="btn btn-primary" style="margin-top:16px;"><i class="fas fa-plus"></i> Create Project</a>
+</div>
+{% endif %}
+{% endblock %}

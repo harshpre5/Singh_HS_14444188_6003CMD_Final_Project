@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block page_title %}Constraints — {{ role.role_title }}{% endblock %}
+{% block page_subtitle %}Define hard constraints for {{ project.name }}{% endblock %}
+
+{% block header_actions %}
+<div style="display:flex;gap:8px;">
+    <a href="{{ url_for('recommendation.configure_weights', role_id=role.id) }}" class="btn btn-secondary"><i class="fas fa-sliders-h"></i> Scoring Weights</a>
+    <a href="{{ url_for('manager.edit_project', project_id=project.id) }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Current Constraints -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Active Constraints ({{ constraints|length }})</h3>
+        </div>
+        {% if constraints %}
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            {% for c in constraints %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg-tertiary);border-radius:var(--radius-md);border-left:3px solid {% if c.is_active %}var(--danger){% else %}var(--text-muted){% endif %};">
+                <div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;font-size:0.9rem;">{{ c.constraint_type|replace('_',' ')|title }}</span>
+                        {% if not c.is_active %}<span class="badge badge-warning">Disabled</span>{% endif %}
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-top:3px;">
+                        {% if c.parameter_name %}{{ c.parameter_name }}{% endif %}
+                        {% if c.parameter_value %} → {{ c.parameter_value }}{% endif %}
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="toggle_constraint">
+                        <input type="hidden" name="constraint_id" value="{{ c.id }}">
+                        <button type="submit" class="btn btn-sm btn-ghost" title="{{ 'Disable' if c.is_active else 'Enable' }}">
+                            <i class="fas {{ 'fa-eye-slash' if c.is_active else 'fa-eye' }}"></i>
+                        </button>
+                    </form>
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="remove_constraint">
+                        <input type="hidden" name="constraint_id" value="{{ c.id }}">
+                        <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-filter"></i>
+            <p>No constraints defined. Candidates won't be filtered.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Constraint -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Add Hard Constraint</h3>
+        </div>
+        <form method="POST" id="constraintForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add_constraint">
+
+            <div class="form-group">
+                <label class="form-label">Constraint Type</label>
+                <select name="constraint_type" id="constraintType" onchange="updateConstraintFields()" required>
+                    <option value="">Select type...</option>
+                    {% for ct in constraint_types %}
+                    <option value="{{ ct.value }}"
+                            data-needs-skill="{{ ct.needs_skill|lower }}"
+                            data-needs-value="{{ ct.needs_value|lower }}"
+                            data-value-label="{{ ct.value_label|default('') }}"
+                            data-has-text="{{ ct.get('has_text', False)|lower }}"
+                            data-text-label="{{ ct.get('text_label', '')|default('') }}">
+                        {{ ct.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" id="skillField" style="display:none;">
+                <label class="form-label">Skill</label>
+                <select name="parameter_name" id="skillSelect">
+                    <option value="">Select skill...</option>
+                    {% for skill in skills %}
+                    <option value="{{ skill.name }}">{{ skill.name }} ({{ skill.category.name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" id="textField" style="display:none;">
+                <label class="form-label" id="textFieldLabel">Name</label>
+                <input type="text" name="parameter_name" id="textInput" placeholder="">
+            </div>
+
+            <div class="form-group" id="valueField" style="display:none;">
+                <label class="form-label" id="valueFieldLabel">Value</label>
+                <input type="number" name="parameter_value" id="valueInput" step="0.1" min="0">
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Constraint</button>
+        </form>
+
+        <div style="margin-top:24px;padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
+            <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-info-circle" style="color:var(--info);margin-right:6px;"></i>How constraints work</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.7;">
+                Hard constraints are pass/fail filters. Any employee who fails even one constraint is eliminated from consideration for this role. The engine then scores only the remaining candidates.<br><br>
+                Use <strong>Mandatory Skill</strong> to require a skill at any level.<br>
+                Use <strong>Min Proficiency</strong> to require a skill at a specific level (1-10).<br>
+                Use <strong>Max Workload</strong> to exclude overloaded employees.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function updateConstraintFields() {
+    const sel = document.getElementById('constraintType');
+    const opt = sel.options[sel.selectedIndex];
+
+    const skillField = document.getElementById('skillField');
+    const valueField = document.getElementById('valueField');
+    const textField = document.getElementById('textField');
+
+    skillField.style.display = opt.dataset.needsSkill === 'true' ? 'block' : 'none';
+    valueField.style.display = opt.dataset.needsValue === 'true' ? 'block' : 'none';
+    textField.style.display = opt.dataset.hasText === 'true' ? 'block' : 'none';
+
+    if (opt.dataset.valueLabel) {
+        document.getElementById('valueFieldLabel').textContent = opt.dataset.valueLabel;
+    }
+    if (opt.dataset.textLabel) {
+        document.getElementById('textFieldLabel').textContent = opt.dataset.textLabel;
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

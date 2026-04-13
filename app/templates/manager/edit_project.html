@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block page_title %}{{ project.name }}{% endblock %}
+{% block page_subtitle %}Configure roles, constraints, and run the recommendation engine{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('manager.projects') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Project Status Banner -->
+{% if project.status == 'completed' %}
+<div style="padding:16px 20px;background:var(--success-subtle);border:1px solid var(--success);border-radius:var(--radius-lg);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <i class="fas fa-check-circle" style="color:var(--success);font-size:1.5rem;"></i>
+        <div>
+            <div style="font-weight:700;color:var(--success);">Project Finalised</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">The team has been approved and allocated.</div>
+        </div>
+    </div>
+    <a href="{{ url_for('recommendation.view_finalised', project_id=project.id) }}" class="btn btn-success"><i class="fas fa-eye"></i> View Finalised Team</a>
+</div>
+{% elif project.status == 'in_progress' %}
+<div style="padding:16px 20px;background:var(--info-subtle);border:1px solid var(--info);border-radius:var(--radius-lg);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <i class="fas fa-cogs" style="color:var(--info);font-size:1.5rem;"></i>
+        <div>
+            <div style="font-weight:700;color:var(--info);">Engine Run Complete — Awaiting Finalisation</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">Review results, select your team, and finalise.</div>
+        </div>
+    </div>
+    {% set latest_rec = project.recommendations.order_by(None)[-1] if project.recommendations.count() > 0 else None %}
+    {% if latest_rec %}
+    <a href="{{ url_for('recommendation.view_results', recommendation_id=latest_rec.id) }}" class="btn btn-primary"><i class="fas fa-eye"></i> View Results & Finalise</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-flag"></i></div>
+        <div class="stat-value" style="font-size:1.1rem; text-transform:capitalize;">{{ project.priority }}</div>
+        <div class="stat-label">Priority</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ roles | length }}</div>
+        <div class="stat-label">Roles Defined</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-user-plus"></i></div>
+        <div class="stat-value">{{ roles | sum(attribute='quantity') }}</div>
+        <div class="stat-label">Total People Needed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-pound-sign"></i></div>
+        <div class="stat-value">{{ '£{:,.0f}'.format(project.budget) if project.budget else 'N/A' }}</div>
+        <div class="stat-label">Budget</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Existing Roles -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Role Requirements</h3>
+        </div>
+        {% if roles %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            {% for role in roles %}
+            <div style="padding:16px; background:var(--bg-tertiary); border-radius:var(--radius-md); border-left:3px solid var(--accent);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600; font-size:0.95rem;">{{ role.role_title }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                            {{ role.quantity }} needed · {{ role.priority | title }} priority
+                        </div>
+                    </div>
+                    <span class="badge badge-purple">{{ role.constraints.count() }} constraints</span>
+                </div>
+                {% if role.description %}
+                <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:8px;">{{ role.description }}</div>
+                {% endif %}
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <a href="{{ url_for('recommendation.configure_constraints', role_id=role.id) }}" class="btn btn-sm btn-secondary"><i class="fas fa-filter"></i> Constraints</a>
+                    <a href="{{ url_for('recommendation.configure_weights', role_id=role.id) }}" class="btn btn-sm btn-secondary"><i class="fas fa-sliders-h"></i> Weights</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No roles defined yet. Add your first role requirement.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Role Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Add Role Requirement</h3>
+        </div>
+        <form method="POST" action="{{ url_for('manager.add_role', project_id=project.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label class="form-label">Role Title</label>
+                <input type="text" name="role_title" required placeholder="e.g. Senior Frontend Developer">
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Quantity Needed</label>
+                    <input type="number" name="quantity" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" placeholder="What this role involves..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Role</button>
+        </form>
+    </div>
+</div>
+
+{% if roles | length > 0 %}
+<div class="card" style="margin-top:24px; text-align:center; padding:32px;">
+    <div style="font-size:1.1rem; font-weight:600; margin-bottom:8px;">
+        <i class="fas fa-brain" style="color:var(--accent); margin-right:8px;"></i>Ready to Build Your Team?
+    </div>
+    <p style="color:var(--text-muted); margin-bottom:20px; font-size:0.9rem;">
+        Configure constraints and weights for each role, then run the 13-layer recommendation engine.
+    </p>
+    <form method="POST" action="{{ url_for('recommendation.run_engine', project_id=project.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary" style="padding:14px 32px;font-size:1rem;">
+            <i class="fas fa-rocket"></i> Run 13-Layer Recommendation Engine
+        </button>
+    </form>
+    {% if project.recommendations.count() > 0 %}
+    <div style="margin-top:16px;">
+        <span style="font-size:0.82rem;color:var(--text-muted);">Previous runs:</span>
+        {% for r in project.recommendations.order_by(None)[-3:] %}
+        <a href="{{ url_for('recommendation.view_results', recommendation_id=r.id) }}" class="btn btn-sm btn-ghost" style="margin-left:6px;">
+            {{ r.run_timestamp.strftime('%d %b %H:%M') }} — {{ (r.confidence_score * 100)|int }}% confidence
+            {% if r.status == 'approved' %}<span class="badge badge-success" style="margin-left:4px;">Finalised</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

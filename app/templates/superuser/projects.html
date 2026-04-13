@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block page_title %}All Projects{% endblock %}
+{% block page_subtitle %}Monitor all projects across the organisation{% endblock %}
+
+{% block content %}
+{% if projects %}
+<div class="table-wrapper">
+    <table>
+        <thead><tr><th>Project</th><th>Manager</th><th>Status</th><th>Priority</th><th>Roles</th><th>Recommendations</th><th>Created</th></tr></thead>
+        <tbody>
+        {% for p in projects %}
+        <tr>
+            <td style="font-weight:600;">{{ p.name }}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="avatar" style="background:{{ p.manager.avatar_color }};width:28px;height:28px;font-size:0.65rem;">{{ p.manager.initials }}</div>
+                    {{ p.manager.full_name }}
+                </div>
+            </td>
+            <td><span class="badge badge-{% if p.status == 'in_progress' %}success{% elif p.status == 'draft' %}purple{% elif p.status == 'completed' %}info{% else %}warning{% endif %}">{{ p.status|replace('_',' ')|title }}</span></td>
+            <td><span class="badge badge-{% if p.priority == 'critical' %}danger{% elif p.priority == 'high' %}warning{% else %}info{% endif %}">{{ p.priority|title }}</span></td>
+            <td>{{ p.role_requirements.count() }}</td>
+            <td>
+                {% set rec_count = p.recommendations.count() %}
+                {% if rec_count > 0 %}
+                <span class="badge badge-success">{{ rec_count }} run(s)</span>
+                {% else %}
+                <span style="color:var(--text-muted);font-size:0.82rem;">None yet</span>
+                {% endif %}
+            </td>
+            <td style="color:var(--text-muted);font-size:0.82rem;">{{ p.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-project-diagram"></i>
+    <p>No projects created yet.</p>
+</div>
+{% endif %}
+{% endblock %}

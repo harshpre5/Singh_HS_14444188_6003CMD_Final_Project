@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block page_title %}Skills & Proficiency{% endblock %}
+{% block page_subtitle %}Manage your skills, proficiency levels, and experience{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- My Current Skills -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">My Skills ({{ my_skills | length }})</h3>
+        </div>
+
+        {% if my_skills %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            {% for es in my_skills %}
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                        <span style="font-weight:600; font-size:0.9rem;">{{ es.skill.name }}</span>
+                        {% if es.is_primary %}<span class="badge badge-purple">Primary</span>{% endif %}
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        {{ es.skill.category.name }} · {{ es.years_used }} yrs · Last used: {{ es.last_used_date.strftime('%b %Y') if es.last_used_date else 'N/A' }}
+                    </div>
+                    <div style="margin-top:6px;">
+                        <div class="progress-bar" style="height:6px; width:120px;">
+                            <div class="progress-fill" style="width:{{ es.proficiency * 10 }}%"></div>
+                        </div>
+                        <span style="font-size:0.72rem; color:var(--text-muted);">{{ es.proficiency }}/10</span>
+                    </div>
+                </div>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="remove_skill">
+                    <input type="hidden" name="skill_entry_id" value="{{ es.id }}">
+                    <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--danger);" title="Remove">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-code"></i>
+            <p>No skills added yet. Add your first skill!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add New Skill -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Add a Skill</h3>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add_skill">
+
+            <div class="form-group">
+                <label class="form-label">Skill Category</label>
+                <select id="categoryFilter" onchange="filterSkills()">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Skill</label>
+                <select name="skill_id" id="skillSelect" required>
+                    <option value="">Select a skill</option>
+                    {% for skill in all_skills %}
+                    <option value="{{ skill.id }}" data-cat="{{ skill.category_id }}">{{ skill.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Proficiency Level (1-10)</label>
+                <input type="range" name="proficiency" min="1" max="10" value="5" id="profRange"
+                       oninput="document.getElementById('profVal').textContent = this.value"
+                       style="width:100%; accent-color:var(--accent);">
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted);">
+                    <span>Beginner</span>
+                    <span id="profVal" style="font-weight:700; color:var(--accent); font-size:1rem;">5</span>
+                    <span>Expert</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Years Used</label>
+                <input type="number" name="years_used" step="0.5" min="0" value="1" placeholder="e.g. 3.5">
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" name="is_primary" style="width:auto; accent-color:var(--accent);">
+                    <span class="form-label" style="margin:0;">Mark as primary skill</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Skill</button>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function filterSkills() {
+    const catId = document.getElementById('categoryFilter').value;
+    const options = document.querySelectorAll('#skillSelect option');
+    options.forEach(opt => {
+        if (!opt.value) return;
+        opt.style.display = (!catId || opt.dataset.cat === catId) ? '' : 'none';
+    });
+    document.getElementById('skillSelect').value = '';
+}
+</script>
+{% endblock %}
+{% endblock %}

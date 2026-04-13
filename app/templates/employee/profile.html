@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your personal and professional information{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Profile Information</h3>
+        <span class="badge badge-purple">{{ current_user.role | title }}</span>
+    </div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Department</label>
+                <select name="department">
+                    <option value="">Select department</option>
+                    {% for dept in ['Engineering','Data Science','Product','Design','Marketing','Sales','Finance','Human Resources','Operations','Legal','Customer Support','IT & Infrastructure','Research & Development','Quality Assurance','Business Development','Content & Communications','Strategy & Consulting','Compliance & Risk','Administration'] %}
+                    <option value="{{ dept }}" {{ 'selected' if profile and profile.department == dept }}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Job Title</label>
+                <input type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. Senior Software Engineer">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Years of Experience</label>
+                <input type="number" name="years_of_experience" step="0.5" min="0" value="{{ profile.years_of_experience if profile else 0 }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Hourly Rate (£)</label>
+                <input type="number" name="hourly_rate" step="0.01" min="0" value="{{ profile.hourly_rate if profile else 0 }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="text" name="phone" value="{{ profile.phone if profile else '' }}" placeholder="+44 7123 456789">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <select name="location">
+                    <option value="">Select location</option>
+                    {% for loc in ['London, UK','Manchester, UK','Birmingham, UK','Edinburgh, UK','Bristol, UK','Leeds, UK','Glasgow, UK','Liverpool, UK','Cambridge, UK','Oxford, UK','Belfast, UK','Cardiff, UK','New York, US','San Francisco, US','Remote'] %}
+                    <option value="{{ loc }}" {{ 'selected' if profile and profile.location == loc }}>{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea name="bio" placeholder="Brief professional summary...">{{ profile.bio if profile else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Career Goal</label>
+            <textarea name="career_goal" placeholder="Where do you want to grow professionally?">{{ profile.career_goal if profile else '' }}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Profile</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}SkillMatch Pro — Intelligent Team Formation{% endblock %}
+
+{% block fullpage %}
+<div class="landing-hero">
+    <div class="landing-badge">
+        <i class="fas fa-bolt"></i> Decision Intelligence Platform · 13-Layer Engine
+    </div>
+    <h1 class="landing-title">Build the Perfect Team with Data-Driven Precision</h1>
+    <p class="landing-sub">
+        SkillMatch Pro uses TOPSIS multi-criteria analysis, skill decay modelling, Monte Carlo simulation, and Pareto optimisation to assemble optimal project teams — deterministic, explainable, and auditable.
+    </p>
+    <div class="landing-actions">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="padding:14px 28px;font-size:1rem;"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-ghost" style="padding:14px 28px;font-size:1rem;"><i class="fas fa-user-plus"></i> Request Access</a>
+    </div>
+
+    <div class="landing-features">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-brain"></i></div>
+            <div class="feature-title">13-Layer Decision Engine</div>
+            <div class="feature-desc">Hard constraints → TOPSIS scoring → Skill decay → Team synergy → Monte Carlo confidence. All mathematically grounded.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-users-cog"></i></div>
+            <div class="feature-title">Multi-Role Team Builder</div>
+            <div class="feature-desc">Define multiple roles per project with different requirements. The engine assembles a conflict-free team across all specialities.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-search-plus"></i></div>
+            <div class="feature-title">Full Explainability</div>
+            <div class="feature-desc">Every recommendation includes score breakdowns, radar charts, skill decay analysis, and selection/rejection reasoning.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-balance-scale"></i></div>
+            <div class="feature-title">Pareto Alternatives</div>
+            <div class="feature-desc">See 3 alternative teams optimised for skill match, cost efficiency, or balance — choose the trade-off that fits your project.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-dice"></i></div>
+            <div class="feature-title">Monte Carlo Confidence</div>
+            <div class="feature-desc">200 simulations with randomised weights measure how stable each recommendation is. Know how much you can trust the results.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-robot"></i></div>
+            <div class="feature-title">Beats General AI</div>
+            <div class="feature-desc">Deterministic, constraint-aware, and auditable. Unlike ChatGPT or Gemini, our engine is purpose-built for structured team formation.</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block page_title %}Create New Project{% endblock %}
+{% block page_subtitle %}Define your project and then add role requirements{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:700px;">
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label class="form-label">Project Name</label>
+            <input type="text" name="name" required placeholder="e.g. Customer Portal Redesign">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" placeholder="Describe the project goals, scope, and deliverables..."></textarea>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select name="priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Budget (£)</label>
+                <input type="number" name="budget" step="0.01" min="0" placeholder="Optional">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date">
+            </div>
+            <div class="form-group">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create Project</button>
+            <a href="{{ url_for('manager.projects') }}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

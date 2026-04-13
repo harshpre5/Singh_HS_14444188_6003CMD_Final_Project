@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block page_title %}Skills Taxonomy{% endblock %}
+{% block page_subtitle %}All skill categories and skills in the system{% endblock %}
+
+{% block content %}
+<div style="display:flex; flex-direction:column; gap:16px;">
+    {% for cat in categories %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas {{ cat.icon or 'fa-star' }}" style="color:var(--accent);margin-right:8px;"></i>{{ cat.name }}</h3>
+            <span class="badge badge-purple">{{ cat.skills.count() }} skills</span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            {% for skill in cat.skills %}
+            <span class="skill-tag">{{ skill.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

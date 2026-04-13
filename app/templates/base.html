@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkillMatch Pro{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated and current_user.is_approved %}
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                    <span class="logo-text">SkillMatch<span class="logo-accent">Pro</span></span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                {% if current_user.role == 'employee' %}
+                <div class="nav-section">
+                    <span class="nav-label">Main</span>
+                    <a href="{{ url_for('employee.dashboard') }}" class="nav-item {% if request.endpoint == 'employee.dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('employee.profile') }}" class="nav-item {% if request.endpoint == 'employee.profile' %}active{% endif %}">
+                        <i class="fas fa-user"></i><span>My Profile</span>
+                    </a>
+                    <a href="{{ url_for('employee.skills') }}" class="nav-item {% if request.endpoint == 'employee.skills' %}active{% endif %}">
+                        <i class="fas fa-code"></i><span>Skills</span>
+                    </a>
+                    <a href="{{ url_for('employee.availability') }}" class="nav-item {% if request.endpoint == 'employee.availability' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt"></i><span>Availability</span>
+                    </a>
+                    <a href="{{ url_for('employee.certifications') }}" class="nav-item {% if request.endpoint == 'employee.certifications' %}active{% endif %}">
+                        <i class="fas fa-certificate"></i><span>Certifications</span>
+                    </a>
+                    <a href="{{ url_for('employee.insights') }}" class="nav-item {% if request.endpoint == 'employee.insights' %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i><span>Recommendation Insights</span>
+                    </a>
+                </div>
+                {% elif current_user.role == 'manager' %}
+                <div class="nav-section">
+                    <span class="nav-label">Management</span>
+                    <a href="{{ url_for('manager.dashboard') }}" class="nav-item {% if request.endpoint == 'manager.dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('manager.projects') }}" class="nav-item {% if request.endpoint in ['manager.projects', 'manager.create_project', 'manager.edit_project'] %}active{% endif %}">
+                        <i class="fas fa-project-diagram"></i><span>Projects</span>
+                    </a>
+                    <a href="{{ url_for('manager.employee_list') }}" class="nav-item {% if request.endpoint == 'manager.employee_list' %}active{% endif %}">
+                        <i class="fas fa-users"></i><span>Employees</span>
+                    </a>
+                    <a href="{{ url_for('superuser.llm_comparison') }}" class="nav-item {% if request.endpoint == 'superuser.llm_comparison' %}active{% endif %}">
+                        <i class="fas fa-robot"></i><span>LLM Comparison</span>
+                    </a>
+                </div>
+                {% elif current_user.role == 'superuser' %}
+                <div class="nav-section">
+                    <span class="nav-label">Administration</span>
+                    <a href="{{ url_for('superuser.dashboard') }}" class="nav-item {% if request.endpoint == 'superuser.dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('superuser.users') }}" class="nav-item {% if request.endpoint == 'superuser.users' %}active{% endif %}">
+                        <i class="fas fa-users-cog"></i><span>Users</span>
+                    </a>
+                    <a href="{{ url_for('superuser.skills_taxonomy') }}" class="nav-item {% if request.endpoint == 'superuser.skills_taxonomy' %}active{% endif %}">
+                        <i class="fas fa-tags"></i><span>Skills Taxonomy</span>
+                    </a>
+                    <a href="{{ url_for('superuser.analytics') }}" class="nav-item {% if request.endpoint == 'superuser.analytics' %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i><span>Analytics</span>
+                    </a>
+                    <a href="{{ url_for('superuser.audit_logs') }}" class="nav-item {% if request.endpoint == 'superuser.audit_logs' %}active{% endif %}">
+                        <i class="fas fa-clipboard-list"></i><span>Audit Logs</span>
+                    </a>
+                    <a href="{{ url_for('superuser.all_projects') }}" class="nav-item {% if request.endpoint == 'superuser.all_projects' %}active{% endif %}">
+                        <i class="fas fa-project-diagram"></i><span>All Projects</span>
+                    </a>
+                    <a href="{{ url_for('superuser.llm_comparison') }}" class="nav-item {% if request.endpoint == 'superuser.llm_comparison' %}active{% endif %}">
+                        <i class="fas fa-robot"></i><span>LLM Comparison</span>
+                    </a>
+                </div>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="user-pill">
+                    <div class="avatar" style="background:{{ current_user.avatar_color }}">
+                        {{ current_user.initials }}
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">{{ current_user.first_name }}</span>
+                        <span class="user-role">{{ current_user.role | title }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="nav-item logout-btn">
+                    <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                    <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                <div class="header-right">
+                    {% block header_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash-msg flash-{{ category }}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                    <button class="flash-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="content-body">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% else %}
+        {% block fullpage %}{% endblock %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container flash-floating">
+            {% for category, message in messages %}
+            <div class="flash-msg flash-{{ category }}">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

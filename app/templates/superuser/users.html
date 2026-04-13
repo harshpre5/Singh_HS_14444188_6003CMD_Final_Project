@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Manage all platform users, roles, and access{% endblock %}
+
+{% block content %}
+<div class="table-wrapper">
+    <table>
+        <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for user in users %}
+        <tr>
+            <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="avatar" style="background:{{ user.avatar_color }}; width:32px; height:32px; font-size:0.7rem;">{{ user.initials }}</div>
+                    <span style="font-weight:600;">{{ user.full_name }}</span>
+                </div>
+            </td>
+            <td style="color:var(--text-muted);">{{ user.email }}</td>
+            <td><span class="badge badge-{% if user.role == 'superuser' %}danger{% elif user.role == 'manager' %}warning{% else %}info{% endif %}">{{ user.role | title }}</span></td>
+            <td>
+                {% if not user.is_approved %}<span class="badge badge-warning">Pending</span>
+                {% elif user.is_active_user %}<span class="badge badge-success">Active</span>
+                {% else %}<span class="badge badge-danger">Disabled</span>{% endif %}
+            </td>
+            <td style="color:var(--text-muted); font-size:0.82rem;">{{ user.created_at.strftime('%d %b %Y') }}</td>
+            <td>
+                <div style="display:flex; gap:6px;">
+                    <form method="POST" action="{{ url_for('superuser.toggle_user', user_id=user.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-ghost" title="{{ 'Disable' if user.is_active_user else 'Enable' }}">
+                            <i class="fas {{ 'fa-ban' if user.is_active_user else 'fa-check' }}"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('superuser.change_role', user_id=user.id) }}" style="display:flex; gap:4px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <select name="role" style="padding:4px 8px; font-size:0.78rem; width:auto;">
+                            <option value="employee" {{ 'selected' if user.role == 'employee' }}>Employee</option>
+                            <option value="manager" {{ 'selected' if user.role == 'manager' }}>Manager</option>
+                            <option value="superuser" {{ 'selected' if user.role == 'superuser' }}>Superuser</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-ghost"><i class="fas fa-save"></i></button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

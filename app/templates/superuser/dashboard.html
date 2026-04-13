@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block page_title %}Executive Dashboard{% endblock %}
+{% block page_subtitle %}Organisation-wide overview and monitoring{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ stats.total_employees }}</div>
+        <div class="stat-label">Employees</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-user-tie"></i></div>
+        <div class="stat-value">{{ stats.total_managers }}</div>
+        <div class="stat-label">Managers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-value">{{ stats.pending_approvals }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-project-diagram"></i></div>
+        <div class="stat-value">{{ stats.total_projects }}</div>
+        <div class="stat-label">Projects</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-code"></i></div>
+        <div class="stat-value">{{ stats.total_skills }}</div>
+        <div class="stat-label">Skills</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-brain"></i></div>
+        <div class="stat-value">{{ stats.total_recommendations }}</div>
+        <div class="stat-label">Engine Runs</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Recent Recommendations -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-rocket" style="color:var(--accent);margin-right:8px;"></i>Recent Engine Runs</h3>
+        </div>
+        {% if recent_recs %}
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            {% for r in recent_recs %}
+            <div style="padding:12px;background:var(--bg-tertiary);border-radius:var(--radius-md);display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="font-weight:600;font-size:0.9rem;">{{ r.project.name }}</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);">{{ r.run_timestamp.strftime('%d %b %Y %H:%M') }} · {{ r.candidates.filter_by(is_selected=True).count() }} selected</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;color:var(--accent);">{{ (r.confidence_score * 100)|int }}%</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Confidence</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:20px;"><i class="fas fa-brain"></i><p>No engine runs yet.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-clipboard-list" style="color:var(--info);margin-right:8px;"></i>Recent Activity</h3>
+            <a href="{{ url_for('superuser.audit_logs') }}" class="btn btn-sm btn-ghost">View All</a>
+        </div>
+        {% if recent_logs %}
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto;">
+            {% for log in recent_logs %}
+            <div style="padding:8px 12px;font-size:0.82rem;display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);">
+                <div>
+                    <span class="badge badge-info" style="font-size:0.68rem;">{{ log.action|replace('_',' ')|title }}</span>
+                    <span style="margin-left:6px;">{% if log.user %}{{ log.user.full_name }}{% else %}System{% endif %}</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:0.75rem;">{{ log.created_at.strftime('%H:%M') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:20px;"><i class="fas fa-clipboard"></i><p>No activity yet.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header">
+        <h3 class="card-title">Quick Actions</h3>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <a href="{{ url_for('superuser.users') }}" class="btn btn-secondary"><i class="fas fa-users-cog"></i> Manage Users</a>
+        <a href="{{ url_for('superuser.analytics') }}" class="btn btn-secondary"><i class="fas fa-chart-pie"></i> Analytics</a>
+        <a href="{{ url_for('superuser.skills_taxonomy') }}" class="btn btn-secondary"><i class="fas fa-tags"></i> Skills Taxonomy</a>
+        <a href="{{ url_for('superuser.all_projects') }}" class="btn btn-secondary"><i class="fas fa-project-diagram"></i> All Projects</a>
+        <a href="{{ url_for('superuser.llm_comparison') }}" class="btn btn-secondary"><i class="fas fa-robot"></i> LLM Comparison</a>
+        <a href="{{ url_for('superuser.audit_logs') }}" class="btn btn-secondary"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+    </div>
+</div>
+{% endblock %}
